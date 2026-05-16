@@ -325,7 +325,7 @@ st.markdown("""
         font-family: 'Inter', sans-serif;
         font-size: 11px;
         font-weight: 600;
-        color: #ffffff;
+        color: #ffcc00;
         text-shadow: 0 0 8px rgba(255, 255, 255, 0.5);
         letter-spacing: 1.5px;
         opacity: 0.95;
