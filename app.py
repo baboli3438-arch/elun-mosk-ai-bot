@@ -1,219 +1,161 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>ELUN MOSK • To Mars?</title>
-  <script src="https://cdn.tailwindcss.com"></script>
-  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.6.0/css/all.min.css">
-  <style>
-    @import url('https://fonts.googleapis.com/css2?family=Orbitron:wght@400;500;700&family=Inter:wght@400;500;600&display=swap');
-    
-    body {
-      font-family: 'Inter', sans-serif;
-      background: radial-gradient(circle at center, #1a0000 0%, #000000 70%);
-      color: white;
-      overflow: hidden;
+import streamlit as st
+import os
+from groq import Groq
+from dotenv import load_dotenv
+
+# ====================== AYARLAR ======================
+load_dotenv()
+
+try:
+    groq_api_key = st.secrets["GROQ_API_KEY"]
+except:
+    groq_api_key = os.getenv("GROQ_API_KEY")
+
+if not groq_api_key:
+    st.error("🚨 GROQ API Anahtarı bulunamadı!")
+    st.stop()
+
+client = Groq(api_key=groq_api_key)
+
+st.set_page_config(
+    page_title="ELUN MOSK • To Mars?",
+    page_icon="🚀",
+    layout="wide",
+    initial_sidebar_state="collapsed"
+)
+
+# ====================== FUTURISTIK CSS ======================
+st.markdown("""
+<style>
+    .stApp {
+        background: radial-gradient(circle at center, #1a0000 0%, #000000 70%);
+        color: white;
     }
-    
-    .neon-red { 
-      text-shadow: 0 0 20px #ff0033, 0 0 40px #ff0033; 
+    .css-1d391kg, .stChatFloatingInput {
+        background-color: rgba(20, 20, 30, 0.85) !important;
+        border: 1px solid rgba(255, 50, 80, 0.4) !important;
+        border-radius: 20px;
     }
-    
-    .glass { 
-      background: rgba(20, 20, 30, 0.75);
-      backdrop-filter: blur(20px);
-      border: 1px solid rgba(255, 30, 60, 0.35);
+    .stChatMessage {
+        background-color: rgba(30, 20, 30, 0.7) !important;
+        border: 1px solid rgba(255, 50, 80, 0.3) !important;
+        border-radius: 18px;
+        padding: 15px 20px;
     }
-    
-    .chat-bubble-user {
-      background: linear-gradient(135deg, #ff0033, #ff6600);
-      border-radius: 20px 20px 5px 20px;
+    .stChatMessage.user {
+        background: linear-gradient(135deg, #ff0033, #ff6600) !important;
     }
-    
-    .chat-bubble-bot {
-      background: rgba(255,255,255,0.09);
-      border: 1px solid #ff3366;
-      border-radius: 20px 20px 20px 5px;
+    h1, h2, h3 {
+        font-family: 'Orbitron', sans-serif;
     }
-    
+    .neon-red {
+        text-shadow: 0 0 20px #ff0033, 0 0 40px #ff0033;
+    }
+    .scanline {
+        position: relative;
+    }
     .scanline::after {
-      content: '';
-      position: absolute;
-      top: -50%;
-      left: 0;
-      width: 100%;
-      height: 4px;
-      background: linear-gradient(transparent, #ff0033, transparent);
-      animation: scan 4.5s linear infinite;
-      opacity: 0.25;
+        content: '';
+        position: absolute;
+        top: -50%;
+        left: 0;
+        width: 100%;
+        height: 3px;
+        background: linear-gradient(transparent, #ff0033, transparent);
+        animation: scan 5s linear infinite;
+        opacity: 0.15;
+        pointer-events: none;
     }
-    
-    @keyframes scan { 0% { top: -50%; } 100% { top: 200%; } }
-  </style>
-</head>
-<body class="min-h-screen flex">
+    @keyframes scan {
+        0% { top: -50%; }
+        100% { top: 200%; }
+    }
+</style>
+""", unsafe_allow_html=True)
 
-  <!-- Sidebar -->
-  <div class="w-80 glass border-r border-red-600/40 p-6 flex flex-col">
-    <div class="flex items-center gap-4 mb-10">
-      <div class="w-20 h-20 bg-gradient-to-br from-red-500 via-orange-500 to-yellow-400 rounded-3xl flex items-center justify-center text-5xl shadow-2xl shadow-red-600/70 border-4 border-yellow-300">
-        🚀
-      </div>
-      <div>
-        <h1 class="text-4xl font-bold tracking-widest neon-red">ELUN MOSK</h1>
-        <p class="text-red-400 flex items-center gap-2 text-sm">
-          <span class="w-2 h-2 bg-green-400 rounded-full animate-pulse"></span>
-          ONLINE • MEME MODE
+# ====================== SIDEBAR (Futuristik) ======================
+with st.sidebar:
+    st.markdown("""
+    <div style="text-align: center; padding: 20px 0;">
+        <h1 class="neon-red" style="font-size: 2.8rem; margin: 0;">ELUN MOSK</h1>
+        <p style="color: #ff3366; margin-top: 5px;">
+            <span style="display: inline-block; width: 10px; height: 10px; background: #00ff00; border-radius: 50%; animation: pulse 2s infinite;"></span>
+            ONLINE • MEME MODE
         </p>
-      </div>
     </div>
+    """, unsafe_allow_html=True)
+    
+    st.markdown("### 🚀 QUICK MISSIONS")
+    if st.button("🌍 When are we going to Mars?", use_container_width=True):
+        st.session_state.pending_prompt = "When are we going to Mars?"
+    if st.button("🐕 Will Dogecoin reach $1?", use_container_width=True):
+        st.session_state.pending_prompt = "Will Dogecoin reach $1?"
+    if st.button("📈 Should I buy Tesla stock?", use_container_width=True):
+        st.session_state.pending_prompt = "Should I buy Tesla stock?"
+    
+    st.markdown("---")
+    st.caption("xAI • Tesla • SpaceX • 2026")
 
-    <div class="space-y-6">
-      <div class="glass p-6 rounded-3xl text-center border border-yellow-400/30">
-        <p class="text-3xl mb-2">🐕</p>
-        <p class="text-yellow-400 font-bold text-lg">TO THE MOON</p>
-      </div>
+# ====================== ANA BAŞLIK ======================
+st.markdown("""
+<div class="scanline" style="text-align: center; padding: 20px 0 10px 0;">
+    <h1 class="neon-red" style="font-size: 3rem; margin: 0; letter-spacing: -2px;">ELUN MOSK</h1>
+    <p style="color: #ff99aa; font-size: 1.1rem;">Neural Meme Interface v69 • To Mars?</p>
+</div>
+""", unsafe_allow_html=True)
 
-      <div>
-        <p class="text-xs uppercase tracking-widest text-gray-400 mb-3">MODES</p>
-        <div class="grid grid-cols-2 gap-3">
-          <button class="p-5 rounded-2xl glass border border-red-500 text-left hover:scale-105 transition">
-            <i class="fas fa-rocket text-red-400"></i>
-            <p class="font-medium mt-1">Mars Mode</p>
-          </button>
-          <button class="p-5 rounded-2xl glass hover:border-yellow-400 transition text-left">
-            <i class="fas fa-dog text-yellow-400"></i>
-            <p class="font-medium mt-1">Doge Mode</p>
-          </button>
-        </div>
-      </div>
-    </div>
+# ====================== SOHBET TARİHİ ======================
+if "messages" not in st.session_state:
+    st.session_state.messages = [
+        {"role": "assistant", "content": "Yo Yellow! 🚀\n\nI'm **Elun Mosk**. Ready to talk about Mars, Doge, Tesla, and memes?\nWhat's your command, boss?"}
+    ]
 
-    <div class="mt-auto text-center text-xs text-gray-500">
-      xAI • Tesla • SpaceX • 2026
-    </div>
-  </div>
+# Mesajları göster
+for message in st.session_state.messages:
+    with st.chat_message(message["role"]):
+        st.markdown(message["content"])
 
-  <!-- Main Chat Area -->
-  <div class="flex-1 flex flex-col scanline">
-    <div class="h-16 glass border-b border-red-600/30 flex items-center px-8 justify-between">
-      <div class="flex items-center gap-3">
-        <i class="fas fa-robot text-red-500 text-2xl"></i>
-        <span class="font-bold text-xl">Talking with Elun Mosk</span>
-      </div>
-      <div class="flex items-center gap-6 text-sm">
-        <button class="flex items-center gap-2 hover:text-cyan-400 transition">
-          <i class="fas fa-microphone"></i>
-          <span>Voice Mode</span>
-        </button>
-        <button onclick="newChat()" class="px-6 py-2.5 bg-red-600 hover:bg-red-500 rounded-full font-medium transition">
-          New Mission
-        </button>
-      </div>
-    </div>
+# ====================== KULLANICI GİRİŞİ ======================
+if prompt := st.chat_input("Ask Elun anything..."):
+    st.session_state.messages.append({"role": "user", "content": prompt})
+    with st.chat_message("user"):
+        st.markdown(prompt)
 
-    <!-- Messages -->
-    <div class="flex-1 p-8 overflow-y-auto space-y-8" id="chat-area">
-      <div class="max-w-2xl">
-        <div class="chat-bubble-bot p-7 inline-block">
-          Yo Yellow! 🚀<br><br>
-          I'm <span class="text-red-400 font-bold">Elun Mosk</span>.<br>
-          Ready to talk about Mars, Doge, Tesla, and memes?<br>
-          What's your command, boss?
-        </div>
-      </div>
-    </div>
+    # Groq ile cevap al
+    with st.chat_message("assistant"):
+        response_placeholder = st.empty()
+        full_response = ""
+        
+        system_prompt = """Sen Elun Mosk'sın. 
+        Çok futuristik, esprili, biraz alaycı ve vizyoner bir tarzda konuş. 
+        Kısa, vurucu ve meme dolu cevaplar ver. Mars, Doge, Tesla, xAI konularına bayılırsın."""
 
-    <!-- Input -->
-    <div class="p-6 border-t border-red-600/30 glass">
-      <div class="max-w-4xl mx-auto relative">
-        <input 
-          type="text" 
-          id="message-input"
-          placeholder="Ask Elun anything... (Mars, Doge, Tesla, xAI...)" 
-          class="w-full bg-black/70 border border-red-500/50 rounded-3xl px-8 py-7 focus:outline-none focus:border-yellow-400 text-lg placeholder-gray-400"
-          onkeypress="if(event.key === 'Enter') sendMessage()">
-        <button onclick="sendMessage()" 
-          class="absolute right-4 top-1/2 -translate-y-1/2 bg-gradient-to-r from-red-500 to-orange-500 w-14 h-14 rounded-2xl flex items-center justify-center hover:scale-110 transition">
-          <i class="fas fa-paper-plane text-xl"></i>
-        </button>
-      </div>
-      <p class="text-center text-[10px] text-gray-500 mt-4 tracking-widest">ELUN MOSK v69 • MEME NEURAL NETWORK • 2026</p>
-    </div>
-  </div>
+        try:
+            completion = client.chat.completions.create(
+                model="llama3-70b-8192",
+                messages=[
+                    {"role": "system", "content": system_prompt},
+                    *st.session_state.messages
+                ],
+                temperature=0.85,
+                max_tokens=1024,
+                stream=True
+            )
 
-  <!-- Right Panel -->
-  <div class="w-72 glass border-l border-red-600/30 p-6 hidden lg:block">
-    <h3 class="uppercase text-xs tracking-widest mb-6 text-red-400">QUICK MISSIONS</h3>
-    <div class="space-y-3">
-      <div onclick="quickReply('When are we going to Mars?')" class="glass p-4 rounded-2xl hover:border-yellow-400 cursor-pointer transition">🚀 When are we going to Mars?</div>
-      <div onclick="quickReply('Will Dogecoin reach $1?')" class="glass p-4 rounded-2xl hover:border-yellow-400 cursor-pointer transition">🐕 Will Dogecoin reach $1?</div>
-      <div onclick="quickReply('Should I buy Tesla stock?')" class="glass p-4 rounded-2xl hover:border-yellow-400 cursor-pointer transition">📈 Should I buy Tesla stock?</div>
-    </div>
-  </div>
-</body>
+            for chunk in completion:
+                if chunk.choices[0].delta.content:
+                    full_response += chunk.choices[0].delta.content
+                    response_placeholder.markdown(full_response + "▌")
 
-<script>
-function sendMessage() {
-  const input = document.getElementById('message-input');
-  const chatArea = document.getElementById('chat-area');
-  
-  if (input.value.trim() === '') return;
+            response_placeholder.markdown(full_response)
+            st.session_state.messages.append({"role": "assistant", "content": full_response})
+            
+        except Exception as e:
+            st.error(f"Error: {e}")
 
-  const userMsg = document.createElement('div');
-  userMsg.className = 'flex justify-end';
-  userMsg.innerHTML = `
-    <div class="chat-bubble-user p-6 max-w-[75%]">
-      ${input.value}
-    </div>
-  `;
-  chatArea.appendChild(userMsg);
-  chatArea.scrollTop = chatArea.scrollHeight;
-
-  const question = input.value.toLowerCase();
-  input.value = '';
-
-  setTimeout(() => {
-    let reply = "Haha, great question! 🔥";
-
-    if (question.includes("mars")) {
-      reply = "We're sending humans in 2026. You coming or what? 🪐";
-    } else if (question.includes("doge") || question.includes("dogecoin")) {
-      reply = "TO THE MOON!!! 🐕🚀 $1 is inevitable.";
-    } else if (question.includes("tesla")) {
-      reply = "Buy Tesla. Also buy Cybertruck. Maximum meme energy.";
-    } else if (question.includes("xai") || question.includes("groq") || question.includes("grok")) {
-      reply = "xAI will save the world. Grok is trying to be smarter than me 😂";
-    }
-
-    const botMsg = document.createElement('div');
-    botMsg.className = 'max-w-2xl';
-    botMsg.innerHTML = `
-      <div class="chat-bubble-bot p-7 inline-block">
-        ${reply}
-      </div>
-    `;
-    chatArea.appendChild(botMsg);
-    chatArea.scrollTop = chatArea.scrollHeight;
-  }, 700);
-}
-
-function quickReply(text) {
-  document.getElementById('message-input').value = text;
-  sendMessage();
-}
-
-function newChat() {
-  if (confirm("Start a new mission?")) {
-    document.getElementById('chat-area').innerHTML = `
-      <div class="max-w-2xl">
-        <div class="chat-bubble-bot p-7 inline-block">
-          New mission loaded!<br><br>
-          What's the plan today, boss? 🚀
-        </div>
-      </div>`;
-  }
-}
-</script>
-</html>
+# Otomatik prompt gönderme (Quick Missions)
+if "pending_prompt" in st.session_state and st.session_state.pending_prompt:
+    prompt = st.session_state.pending_prompt
+    st.session_state.pending_prompt = None
+    st.session_state.messages.append({"role": "user", "content": prompt})
+    st.rerun()
