@@ -6,7 +6,7 @@ from dotenv import load_dotenv
 import streamlit.components.v1 as components
 
 # =====================================================================
-# 1. API AYARLARI
+# 1. GÜVENLİK VE API AYARLARI
 # =====================================================================
 load_dotenv()
 try:
@@ -15,13 +15,13 @@ except Exception:
     groq_api_key = os.getenv("GROQ_API_KEY")
 
 if not groq_api_key:
-    st.error("🚨 API Anahtarı Bulunamadı! Lütfen Streamlit Dashboard > Settings > Secrets kısmını kontrol edin.")
+    st.error("🚨 API Anahtarı Bulunamadı! Lütfen Streamlit Secrets ayarlarını kontrol edin.")
     st.stop()
 
 client = Groq(api_key=groq_api_key)
 
 # =====================================================================
-# 2. SOHBET GEÇMİŞİ VE STRATEGIC STATE YÖNETİMİ
+# 2. SOHBET GEÇMİŞİ YÖNETMİ
 # =====================================================================
 if "chat_history" not in st.session_state:
     st.session_state.chat_history = [
@@ -129,30 +129,45 @@ html_template = f"""
     }}
     renderHistory();
 
+    // Streamlit ile haberleşen resmi güvenli fonksiyon
+    function sendToStreamlit(actionType, dataValue) {{
+      const data = {{ action: actionType, val: dataValue }};
+      
+      // Streamlit Cloud üzerinde iframe engelini aşan yegane yöntem:
+      window.parent.postMessage({{
+        isStreamlitApp: true,
+        type: "streamlit:setComponentValue",
+        value: JSON.dumps(data) // Python tarafına temiz JSON string fırlatıyoruz
+      }}, "*");
+    }}
+
     function sendMessage() {{
       const input = document.getElementById('message-input');
       const val = input.value.trim();
       if (val === '') return;
 
-      // Tarayıcı güvenliğini aşmak için resmi Streamlit postMessage API'sini tetikliyoruz
-      window.parent.postMessage({{
-        type: 'streamlit:setComponentValue',
-        value: {{ action: 'msg', data: val }}
-      }}, '*');
+      // Animasyon ve yükleniyor durumunu göster
+      const userMsg = document.createElement('div');
+      userMsg.className = 'flex justify-end';
+      userMsg.innerHTML = `<div class="chat-bubble-user p-6 max-w-[75%]">${{val}}</div>`;
+      chatArea.appendChild(userMsg);
+      
+      const botLoading = document.createElement('div');
+      botLoading.className = 'max-w-2xl';
+      botLoading.innerHTML = `<div class="chat-bubble-bot p-7 inline-block animate-pulse text-red-400">Analyzing first principles... 🚀</div>`;
+      chatArea.appendChild(botLoading);
+      chatArea.scrollTop = chatArea.scrollHeight;
+
+      sendToStreamlit("msg", val);
+      input.value = '';
     }}
 
     function quickReply(text) {{
-      window.parent.postMessage({{
-        type: 'streamlit:setComponentValue',
-        value: {{ action: 'msg', data: text }}
-      }}, '*');
+      sendToStreamlit("msg", text);
     }}
 
     function newChat() {{
-      window.parent.postMessage({{
-        type: 'streamlit:setComponentValue',
-        value: {{ action: 'clear', data: true }}
-      }}, '*');
+      sendToStreamlit("clear", true);
     }}
   </script>
 </body>
@@ -160,51 +175,55 @@ html_template = f"""
 """
 
 # =====================================================================
-# 4. GÜVENLİ VERİ YAKALAMA VE RENDER SÜRECİ
+# 4. STREAMLIT FRAMEWORK VE DOĞRUDAN VERİ ALMA KATMANI
 # =====================================================================
 st.markdown(
     """
     <style>
         #MainMenu, footer, header {visibility: hidden;}
-        .stApp {margin: 0px; padding: 0px;}
+        .stApp {margin: 0px; padding: 0px; background-color: #000000;}
         iframe {position: fixed; top: 0; left: 0; width: 100%; height: 100%; border: none; z-index: 99999;}
     </style>
     """, 
     unsafe_allow_html=True
 )
 
-# JavaScript'ten gelen veriyi güvenli bileşenle yakalıyoruz
-response_data = components.html(html_template, height=1080, scrolling=False)
+# html_template çalıştırılır ve dönen component_value doğrudan dinlenir
+component_value = components.html(html_template, height=1080, scrolling=False)
 
-if response_data:
-    # JavaScript postMessage burayı tetikler
+# Eğer tarayıcıdan postMessage tetiklendiyse veri buraya düşer
+if component_value:
     try:
-        # Eğer gelen veri string ise dict'e çevir, zaten dict ise doğrudan kullan
-        res = json.loads(response_data) if isinstance(response_data, str) else response_data
-        action = res.get("action")
-        payload = res.get("data")
-        
-        if action == "msg":
-            st.session_state.chat_history.append({"role": "user", "content": payload})
+        # JSON verisini güvenle ayıkla
+        data_clean = json.loads(component_value) if isinstance(component_value, str) else component_value
+        action = data_clean.get("action")
+        value = data_clean.get("val")
+
+        if action == "msg" and value:
+            # Kullanıcı mesajını ekle
+            st.session_state.chat_history.append({"role": "user", "content": value})
             
+            # Groq İstek Katmanı
             system_prompt = (
-                "Sen Elun Mosk'sın. Tasarımdaki gibi fütüristik, Mars odaklı, Dogecoin seven, "
-                "hafif alaycı ve vizyoner bir tarzda konuş. Yanıtların kısa, vurucu ve İngilizce olsun."
+                "Sen Elun Mosk'sın. Tamamen fütüristik, Mars odakli, Dogecoin hayranı, "
+                "hafif alaycı, esprili ve vizyoner tarzda konuş. İngilizce cevap ver, kısa ve öz olsun."
             )
             
-            with st.spinner(""):
-                completion = client.chat.completions.create(
-                    model="llama3-70b-8192",
-                    messages=[{"role": "system", "content": system_prompt}, *st.session_state.chat_history]
-                )
-                bot_response = completion.choices[0].message.content
-                st.session_state.chat_history.append({"role": "assistant", "content": bot_response})
-                st.rerun()
-                
+            completion = client.chat.completions.create(
+                model="llama3-70b-8192",
+                messages=[{"role": "system", "content": system_prompt}, *st.session_state.chat_history]
+            )
+            bot_response = completion.choices[0].message.content
+            
+            st.session_state.chat_history.append({"role": "assistant", "content": bot_response})
+            st.rerun()
+
         elif action == "clear":
             st.session_state.chat_history = [
                 {"role": "assistant", "content": "New mission loaded!<br><br>What's the plan today, boss? 🚀"}
             ]
             st.rerun()
+
     except Exception as e:
-        pass
+        # Hata logunu bastır ama çökmesini engelle
+        st.write(f"System Error: {e}")
