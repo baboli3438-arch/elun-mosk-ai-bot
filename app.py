@@ -24,7 +24,7 @@ st.markdown("""
     /* Global Arka Plan: Görseldeki Radyal Koyu Kırmızı ve Siyah */
     .stApp {
         background: radial-gradient(circle at center, #1c0205 0%, #050001 80%) !important;
-        color: #ffffff !important;
+        color: #ffcc00 !important;
         font-family: 'Inter', sans-serif;
     }
     
