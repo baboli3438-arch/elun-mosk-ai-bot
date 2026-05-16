@@ -28,7 +28,6 @@ if "chat_history" not in st.session_state:
         {"role": "assistant", "content": "Yo Yellow! 🚀<br><br>I'm <span class='text-red-400 font-bold'>Elun Mosk</span>.<br>Ready to talk about Mars, Doge, Tesla, and memes?<br>What's your command, boss?"}
     ]
 
-# Tetikleyicileri kontrol etmek için bir state bayrağı oluşturuyoruz
 if "last_processed" not in st.session_state:
     st.session_state.last_processed = None
 
@@ -44,6 +43,9 @@ html_template = f"""
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>ELUN MOSK • To Mars?</title>
+  
+  <script src="./streamlit-component-lib.js"></script>
+  
   <script src="https://cdn.tailwindcss.com"></script>
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.6.0/css/all.min.css">
   <style>
@@ -138,22 +140,24 @@ html_template = f"""
       const val = input.value.trim();
       if (val === '') return;
 
-      // Kullanıcıya arayüzde anlık dönüt ver
       const userMsg = document.createElement('div');
       userMsg.className = 'flex justify-end';
       userMsg.innerHTML = `<div class="chat-bubble-user p-6 max-w-[75%]">${{val}}</div>`;
       chatArea.appendChild(userMsg);
       
       const botLoading = document.createElement('div');
-      botLoading.id = 'loading-bubble';
       botLoading.className = 'max-w-2xl';
       botLoading.innerHTML = `<div class="chat-bubble-bot p-7 inline-block animate-pulse text-red-400">Analyzing first principles... 🚀</div>`;
       chatArea.appendChild(botLoading);
       chatArea.scrollTop = chatArea.scrollHeight;
 
-      // Streamlit Cloud uyumlu nesne gönderimi
-      const msgPayload = {{ action: "msg", val: val, ts: Date.now() }};
-      Streamlit.setComponentValue(msgPayload);
+      // Kütüphane kontrolü ile güvenli gönderim
+      if (typeof Streamlit !== 'undefined') {{
+        Streamlit.setComponentValue({{ action: "msg", val: val, ts: Date.now() }});
+      }} else {{
+        // Fallback: Eğer kütüphane sunucudan geç yüklenirse postMessage'a devret
+        window.parent.postMessage({{ isStreamlitApp: true, type: "streamlit:setComponentValue", value: {{ action: "msg", val: val, ts: Date.now() }} }}, "*");
+      }}
       input.value = '';
     }}
 
@@ -164,13 +168,19 @@ html_template = f"""
       chatArea.appendChild(userMsg);
       chatArea.scrollTop = chatArea.scrollHeight;
 
-      const msgPayload = {{ action: "msg", val: text, ts: Date.now() }};
-      Streamlit.setComponentValue(msgPayload);
+      if (typeof Streamlit !== 'undefined') {{
+        Streamlit.setComponentValue({{ action: "msg", val: text, ts: Date.now() }});
+      }} else {{
+        window.parent.postMessage({{ isStreamlitApp: true, type: "streamlit:setComponentValue", value: {{ action: "msg", val: text, ts: Date.now() }} }}, "*");
+      }}
     }}
 
     function newChat() {{
-      const clearPayload = {{ action: "clear", val: true, ts: Date.now() }};
-      Streamlit.setComponentValue(clearPayload);
+      if (typeof Streamlit !== 'undefined') {{
+        Streamlit.setComponentValue({{ action: "clear", val: true, ts: Date.now() }});
+      }} else {{
+        window.parent.postMessage({{ isStreamlitApp: true, type: "streamlit:setComponentValue", value: {{ action: "clear", val: true, ts: Date.now() }} }}, "*");
+      }}
     }}
   </script>
 </body>
@@ -191,23 +201,19 @@ st.markdown(
     unsafe_allow_html=True
 )
 
-# Streamlit yerleşik JavaScript API'sini sayfaya dahil eder ve component_value'ya bağlar
 component_value = components.html(html_template, height=1080, scrolling=False)
 
-# Değer gelirse ve daha önce işlenmiş bir timestamp değilse işleme alıyoruz
 if component_value is not None:
     action = component_value.get("action")
     value = component_value.get("val")
     ts = component_value.get("ts")
     
     if ts != st.session_state.last_processed:
-        st.session_state.last_processed = ts  # Aynı isteğin tekrarlanmasını önle
+        st.session_state.last_processed = ts
         
         if action == "msg" and value:
-            # Kullanıcı girdisini ekle
             st.session_state.chat_history.append({"role": "user", "content": value})
             
-            # Groq AI İstek Bölümü
             system_prompt = (
                 "Sen Elun Mosk'sın. Fütüristik, Mars odaklı, Dogecoin hayranı, "
                 "hafif alaycı, esprili ve vizyoner bir tarzda konuş. Yanıtların kısa, "
