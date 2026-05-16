@@ -27,23 +27,18 @@ if "chat_history" not in st.session_state:
         {"role": "assistant", "content": "Yo bro! 🚀<br><br>I'm <span class='text-red-400 font-bold'>Elun Mosk</span>.<br>Ready to talk about Mars, Doge, Tesla, and memes?<br>What's your command, boss?"}
     ]
 
-# Hızlı butonlar veya New Mission tetiklemeleri için kontrol
-if "quick_input" not in st.session_state:
-    st.session_state.quick_input = ""
-
 # =====================================================================
-# 3. DIŞ CSS GÖMME (STREAMLIT ELEMANLARINI ÖZELLEŞTİRME VE GİZLEME)
+# 3. DIŞ CSS GÖMME (TASARIM VE ÖZELLEŞTİRME)
 # =====================================================================
 st.markdown(
     """
     <style>
-        /* Streamlit varsayılan arayüzünü gizle */
+        /* Streamlit varsayılan arayüz elemanlarını gizle */
         #MainMenu, footer, header {visibility: hidden;}
         .stApp {background-color: #000000; margin: 0; padding: 0;}
         .block-container {padding-top: 0rem; padding-bottom: 0rem; max-width: 100% !important;}
         
-        /* HTML Tasarım Temelleri */
-        @import url('https://fonts.googleapis.com/css2?family=Orbitron:wght@400;500;700&family=Inter:wght@400;500;600&display=swap');
+        @import url('https://fonts.googleapis.com/css2?family=Orbitron:wght=400;500;700&family=Inter:wght=400;500;600&display=swap');
         
         .main-layout {
             font-family: 'Inter', sans-serif;
@@ -63,39 +58,39 @@ st.markdown(
         .scanline::after { content: ''; position: absolute; top: -50%; left: 0; width: 100%; height: 4px; background: linear-gradient(transparent, #ff0033, transparent); animation: scan 4.5s linear infinite; opacity: 0.25; pointer-events: none; }
         @keyframes scan { 0% { top: -50%; } 100% { top: 200%; } }
         
-        /* Streamlit Formunu Sayfanın Altındaki Input Alanına Tam Oturtma */
+        /* Streamlit Form Alanını Özelleştirme */
         .stForm {
             background: transparent !important;
             border: none !important;
             padding: 0 !important;
             margin: 0 auto !important;
-            max-width: 56rem;
+            max-width: 50rem;
         }
-        /* Streamlit Girdi Kutusunu fütüristik yapma */
         .stTextInput input {
             background-color: rgba(0, 0, 0, 0.7) !important;
             border: 1px solid rgba(255, 0, 51, 0.5) !important;
             border-radius: 1.5rem !important;
             color: white !important;
-            padding: 1.5rem 2rem !important;
+            padding: 1.25rem 2rem !important;
             font-size: 1.125rem !important;
         }
         .stTextInput input:focus {
             border-color: #facc15 !important;
             box-shadow: 0 0 15px rgba(250, 204, 21, 0.4) !important;
         }
-        /* Gönder butonunu özelleştirme */
         .stButton button {
             background: linear-gradient(to right, #ff0033, #ff6600) !important;
             color: white !important;
             border: none !important;
-            border-radius: 1rem !important;
+            border-radius: 1.25rem !important;
             padding: 0.75rem 2rem !important;
             font-weight: bold !important;
+            height: 3.5rem !important;
+            width: 100% !important;
             transition: transform 0.2s !important;
         }
         .stButton button:hover {
-            transform: scale(1.05) !important;
+            transform: scale(1.03) !important;
         }
     </style>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.6.0/css/all.min.css">
@@ -104,10 +99,10 @@ st.markdown(
 )
 
 # =====================================================================
-# 4. FORM TETİKLENME VE YAPAY ZEKA MANTIĞI
+# 4. SOHBET MESAJI İŞLEME FONKSİYONU
 # =====================================================================
 def process_message(user_text):
-    if user_text.strip() == "":
+    if not user_text or user_text.strip() == "":
         return
     st.session_state.chat_history.append({"role": "user", "content": user_text})
     
@@ -128,20 +123,18 @@ def process_message(user_text):
         
     st.session_state.chat_history.append({"role": "assistant", "content": bot_response})
 
-# Sidebar üzerindeki veya sağ paneldeki butonların tıklama kontrolleri
+# =====================================================================
+# 5. SIDEBAR BUTON AKSİYONLARI
+# =====================================================================
 if st.sidebar.button("🚀 Mars Mode"):
     process_message("Let's focus heavily on Mars mission.")
 if st.sidebar.button("🐕 Doge Mode"):
     process_message("Tell me about Dogecoin development.")
 if st.sidebar.button("♻️ New Mission", type="primary"):
     st.session_state.chat_history = [{"role": "assistant", "content": "New mission loaded!<br><br>What's the plan today, boss? 🚀"}]
-    st.rerun()
+    st.rarun()
 
-# =====================================================================
-# 5. ARAYÜZ KATMANLARININ BİRLEŞTİRİLMESİ
-# =====================================================================
-
-# Mesaj alanının HTML string yapısı
+# Sohbet geçmişini HTML formatına dönüştürme
 chat_html_content = ""
 for msg in st.session_state.chat_history:
     if msg["role"] == "user":
@@ -149,7 +142,7 @@ for msg in st.session_state.chat_history:
     else:
         chat_html_content += f'<div class="max-w-2xl"><div class="chat-bubble-bot">{msg["content"]}</div></div>'
 
-# Sayfa İskeleti
+# Ana Sayfa Şablon Enjeksiyonu
 st.markdown(f"""
 <div class="main-layout">
   <div class="w-80 glass border-r border-red-600/40 p-6 flex flex-col hidden md:flex">
@@ -168,34 +161,38 @@ st.markdown(f"""
   </div>
 
   <div class="flex-1 flex flex-col scanline relative" style="height: 100vh;">
-    <div class="h-16 glass border-b border-red-600/30 flex items-center px-8 justify-between">
+    <div class="h-16 glass border-b border-red-600/30 flex items-center px-8">
       <div class="flex items-center gap-3"><i class="fas fa-robot text-red-500 text-2xl"></i><span class="font-bold text-xl">Talking with Elun Mosk</span></div>
     </div>
 
-    <div class="flex-1 p-8 overflow-y-auto space-y-8" style="padding-bottom: 12rem;">
+    <div class="flex-1 p-8 overflow-y-auto" style="padding-bottom: 10rem; height: calc(100vh - 12rem);">
         {chat_html_content}
     </div>
     
-    <div class="absolute bottom-0 left-0 w-full p-6 border-t border-red-600/30 glass z-50">
-        </div>
+    <div class="absolute bottom-0 left-0 w-full p-6 border-t border-red-600/30 glass" style="z-index: 10;">
+    </div>
+  </div>
 </div>
 """, unsafe_allow_html=True)
 
-# Streamlit Formunu Tam Alt Kısımdaki Konteyner İçine Yerleştiriyoruz
+# =====================================================================
+# 6. YEREL GÜVENLİ INPUT FORMU (ASLA ÇÖKMEZ)
+# =====================================================================
 with st.container():
-    with st.form(key="chat_form", clear_on_submit=True):
-        cols = st.columns([0, 8, 2, 0]) # Kenar boşlukları ile ortalama
-        with cols[1]:
-            user_input = st.text_input(
-                label="Message input",
-                placeholder="Ask Elun anything... (Mars, Doge, Tesla...)",
-                label_visibility="collapsed"
-            )
-        with cols[2]:
-            submit_button = st.form_submit_button(label="SEND 🚀")
-            
-        if submit_button and user_input:
-            process_message(user_input)
-            st.rerun()
+    # Sütunları 0 olmadan güvenli oranlarla dağıtıyoruz
+    cols = st.columns([7, 2])
+    with cols[0]:
+        user_input = st.text_input(
+            label="Input Box",
+            placeholder="Ask Elun anything... (Mars, Doge, Tesla...)",
+            label_visibility="collapsed",
+            key="user_msg_input"
+        )
+    with cols[2 if len(cols) > 2 else 1]: # Güvenli indeks seçimi
+        submit_button = st.button(label="SEND 🚀", key="submit_msg_btn")
+        
+    if submit_button and user_input:
+        process_message(user_input)
+        st.rarun()
 
 st.markdown("<p class='text-center text-[10px] text-gray-500 tracking-widest' style='position: fixed; bottom: 5px; width: 100%; text-align: center; z-index: 100;'>ELUN MOSK v69 • 2026</p>", unsafe_allow_html=True)
