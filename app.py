@@ -1,12 +1,183 @@
 import streamlit as st
 import os
-import json
 from groq import Groq
 from dotenv import load_dotenv
-import streamlit.components.v1 as components
 
 # =====================================================================
-# 1. GÜVENLİK VE API AYARLARI
+# 1. SAYFA VE GENİŞLİK YAPILANDIRMASI
+# =====================================================================
+st.set_page_config(
+    page_title="ELUN MOSK • To Mars?", 
+    page_icon="🚀", 
+    layout="wide", 
+    initial_sidebar_state="collapsed"
+)
+
+# =====================================================================
+# 2. GÖRSELDEKİ ARAYÜZÜ BİREBİR SAĞLAYAN SİBERPUNK CSS ENJEKSİYONU
+# =====================================================================
+st.markdown("""
+    <style>
+    /* Google Fonts Import */
+    @import url('https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700&family=Inter:wght@400;600&display=swap');
+    
+    /* Global Arka Plan: Görseldeki Radyal Koyu Kırmızı ve Siyah */
+    .stApp {
+        background: radial-gradient(circle at center, #1c0205 0%, #050001 80%) !important;
+        color: #ffffff !important;
+        font-family: 'Inter', sans-serif;
+    }
+    
+    /* Streamlit Gereksiz Menüleri Gizleme */
+    #MainMenu, footer, header {visibility: hidden;}
+    
+    /* 3 Panelli Düzen İçin Ana Taşıyıcı Efektleri */
+    [data-testid="stSidebar"] {
+        background-color: rgba(15, 10, 12, 0.95) !important;
+        border-right: 1px solid rgba(255, 48, 76, 0.25) !important;
+    }
+    
+    /* Sol Panel Logo Bölümü */
+    .brand-area {
+        text-align: center;
+        padding: 15px 0 30px 0;
+        border-bottom: 1px solid rgba(255, 48, 76, 0.15);
+        margin-bottom: 25px;
+    }
+    .brand-logo {
+        font-size: 50px;
+        background: linear-gradient(135deg, #ff3355, #ff6600, #ffcc00);
+        -webkit-background-clip: text;
+        -webkit-text-fill-color: transparent;
+        margin-bottom: 5px;
+    }
+    .brand-title {
+        font-family: 'Orbitron', sans-serif;
+        font-size: 2rem;
+        font-weight: 700;
+        color: #fff;
+        text-shadow: 0 0 15px #ff304c;
+        letter-spacing: 3px;
+        line-height: 1;
+    }
+    .brand-status {
+        color: #ff4d6d;
+        font-size: 11px;
+        letter-spacing: 1.5px;
+        margin-top: 6px;
+    }
+    .brand-status-dot {
+        display: inline-block;
+        width: 7px;
+        height: 7px;
+        background-color: #00ff66;
+        border-radius: 50%;
+        margin-right: 5px;
+        box-shadow: 0 0 8px #00ff66;
+        animation: pulse 1.5s infinite;
+    }
+    
+    /* Görseldeki "TO THE MOON" Bölümü */
+    .moon-card {
+        background: rgba(25, 15, 18, 0.6);
+        border: 1px solid rgba(255, 204, 0, 0.3);
+        border-radius: 20px;
+        padding: 20px;
+        text-align: center;
+        margin-bottom: 30px;
+        box-shadow: 0 0 15px rgba(255, 204, 0, 0.05);
+    }
+    .moon-card-title {
+        color: #ffcc00;
+        font-family: 'Orbitron', sans-serif;
+        font-weight: 700;
+        font-size: 14px;
+        letter-spacing: 1.5px;
+        margin-top: 5px;
+    }
+    
+    /* Sohbet Baloncukları Özelleştirmesi (Görseldeki gibi Keskin ve İnce Kırmızı Çerçeveli) */
+    .stChatMessage {
+        background-color: rgba(18, 11, 13, 0.65) !important;
+        border: 1px solid rgba(255, 48, 76, 0.25) !important;
+        border-radius: 18px !important;
+        padding: 18px !important;
+        margin-bottom: 20px !important;
+    }
+    
+    /* Kullanıcı Mesaj Baloncuğu (Görseldeki gibi Turuncu-Kırmızı Degrade) */
+    [data-testid="stChatMessageUser"] {
+        background: linear-gradient(135deg, #ff2a4b 0%, #ff6a00 100%) !important;
+        border: none !important;
+        color: white !important;
+        border-radius: 18px 18px 4px 18px !important;
+        margin-left: auto !important;
+        max-width: 70%;
+    }
+    
+    /* Input Alanı (Alt Çubuk ve Buton Entegrasyonu) */
+    .stChatInputContainer {
+        border: 1px solid rgba(255, 48, 76, 0.4) !important;
+        background-color: #080305 !important;
+        border-radius: 25px !important;
+    }
+    .stChatInputContainer textarea {
+        color: #ffffff !important;
+    }
+
+    /* -----------------------------------------------------------------
+       YENİ EKLENEN BUTON RENK VE YAZI DÜZELTME CSS ALANI
+       ----------------------------------------------------------------- */
+    /* Sağ paneldeki ve genel uygulamadaki tüm standart Streamlit butonlarını siberpunk tarzına zorla */
+    div.stButton > button {
+        background-color: rgba(25, 10, 15, 0.75) !important;
+        color: #ff4d6d !important; /* Yazı rengi artık beyaz değil, parlak siberpunk kırmızısı */
+        border: 1px solid rgba(255, 48, 76, 0.4) !important; /* İnce kırmızı çerçeve */
+        border-radius: 12px !important;
+        padding: 10px 15px !important;
+        font-family: 'Inter', sans-serif !important;
+        font-weight: 600 !important;
+        transition: all 0.3s ease-in-out !important;
+        box-shadow: 0 0 8px rgba(255, 48, 76, 0.05) !important;
+    }
+
+    /* Butonların üzerine gelindiğinde (Hover durumu) */
+    div.stButton > button:hover {
+        background-color: rgba(255, 48, 76, 0.15) !important;
+        color: #ffcc00 !important; /* Üzerine gelince yazılar Doge sarısına döner */
+        border-color: #ff3355 !important;
+        box-shadow: 0 0 15px rgba(255, 48, 76, 0.3) !important;
+    }
+
+    /* Butona tıklandığında veya odaklanıldığında beyaz blok oluşmasını engelle */
+    div.stButton > button:active, div.stButton > button:focus {
+        background-color: rgba(40, 10, 20, 0.9) !important;
+        color: #ff4d6d !important;
+        border-color: #ff3355 !important;
+        box-shadow: 0 0 10px rgba(255, 48, 76, 0.4) !important;
+    }
+    
+    /* Sol taraftaki Reset Mission (Primary) butonunun özel siberpunk degrade yapısı */
+    div.stButton > button[kind="primary"] {
+        background: linear-gradient(135deg, #ff2a4b 0%, #ff6a00 100%) !important;
+        color: white !important;
+        border: none !important;
+    }
+    div.stButton > button[kind="primary"]:hover {
+        box-shadow: 0 0 20px rgba(255, 42, 75, 0.6) !important;
+        color: white !important;
+    }
+    
+    @keyframes pulse {
+        0% { opacity: 0.4; }
+        50% { opacity: 1; }
+        100% { opacity: 0.4; }
+    }
+    </style>
+""", unsafe_allow_html=True)
+
+# =====================================================================
+# 3. GÜVENLİ API VE AKTİF MODEL BAĞLANTISI (Llama 3.3 Motoru)
 # =====================================================================
 load_dotenv()
 try:
@@ -15,272 +186,154 @@ except Exception:
     groq_api_key = os.getenv("GROQ_API_KEY")
 
 if not groq_api_key:
-    st.error("🚨 API Anahtarı Bulunamadı! Lütfen .env dosyasını veya Streamlit Secrets ayarlarını kontrol edin.")
+    st.error("🚨 GROQ_API_KEY eksik! Lütfen secrets veya .env yapılandırmasını kontrol edin.")
     st.stop()
 
 client = Groq(api_key=groq_api_key)
 
 # =====================================================================
-# 2. SOHBET GEÇMİŞİ VE YAPAY ZEKA YÖNETİMİ
+# 4. SOL PANEL (SIDEBAR) TASARIMI
 # =====================================================================
-if "chat_history" not in st.session_state:
-    st.session_state.chat_history = [
-        {"role": "assistant", "content": "Yo, what's up? 🚀<br><br>I'm <span class='text-red-400 font-bold'>Elun Mosk</span>.<br>Ready to talk about Mars, Doge, Tesla, and memes?<br>What's your command, boss?"}
-    ]
-
-def handle_chat_request(user_message):
-    st.session_state.chat_history.append({"role": "user", "content": user_message})
+with st.sidebar:
+    st.markdown("""
+        <div class="brand-area">
+            <div class="brand-logo">🚀</div>
+            <div class="brand-title">ELUN MOSK</div>
+            <div class="brand-status"><span class="brand-status-dot"></span>ONLINE • MEME MODE</div>
+        </div>
+        
+        <div class="moon-card">
+            <div style="font-size: 28px;">🐕</div>
+            <div class="moon-card-title">TO THE MOON</div>
+        </div>
+    """, unsafe_allow_html=True)
     
+    st.caption("MODES")
+    # State'leri tetikleyen temiz Streamlit butonları
+    if st.button("🚀 Mars Mode", use_container_width=True):
+        st.session_state.quick_trigger = "Let's focus heavily on Mars mission."
+        
+    if st.button("🐕 Doge Mode", use_container_width=True):
+        st.session_state.quick_trigger = "Tell me about Dogecoin development."
+        
+    st.write("---")
+    if st.button("💥 Reset Mission", type="primary", use_container_width=True):
+        st.session_state.messages = []
+        st.rerun()
+
+# =====================================================================
+# 5. MERKEZİ CHAT EKRANI VE ANA AKIŞ
+# =====================================================================
+# Düzen düzenleme sütunları (Görseldeki yerleşimi bozmamak için dengeli dağılım)
+chat_col, side_col = st.columns([3, 1])
+
+with chat_col:
+    st.markdown("### 🤖 Talking with Elun Mosk")
+    
+    # Hafıza havuzu oluşturma
+    if "messages" not in st.session_state:
+        st.session_state.messages = [
+            {
+                "role": "assistant", 
+                "content": "Yo, what's up? 🚀 I'm Elun Mosk. Ready to talk about Mars, Doge, Tesla, and memes?"
+            }
+        ]
+
+    # Ekrandaki mesajları basma adımı
+    for message in st.session_state.messages:
+        with st.chat_message(message["role"]):
+            st.markdown(message["content"])
+
+# Sağ panel "Quick Missions" alanı
+with side_col:
+    st.markdown("<br><br>", unsafe_allow_html=True)
+    st.caption("QUICK MISSIONS")
+    if st.button("When are we going to Mars? 🚀", use_container_width=True):
+        st.session_state.quick_trigger = "When are we going to Mars?"
+    if st.button("Will Dogecoin reach $1? 🐕", use_container_width=True):
+        st.session_state.quick_trigger = "Will Dogecoin reach $1?"
+    if st.button("Should I buy Doge Coin? 📈", use_container_width=True):
+        st.session_state.quick_trigger = "Should I buy Doge coin?"
+
+# =====================================================================
+# 6. GİRDİ YÖNETİMİ VE MODEL TETİKLEME ALANI
+# =====================================================================
+user_input = st.chat_input("Ask Elun anything... (Mars, Doge, Tesla...)")
+
+# Eğer sağ veya sol panel butonlarına tıklandıysa girdiyi oradan yakala
+if "quick_trigger" in st.session_state and st.session_state.quick_trigger:
+    user_input = st.session_state.quick_trigger
+    st.session_state.quick_trigger = None
+
+if user_input:
+    # Kullanıcı mesajını yerleştir
+    with chat_col:
+        with st.chat_message("user"):
+            st.markdown(user_input)
+    st.session_state.messages.append({"role": "user", "content": user_input})
+    
+    # Karakter Tanımı (System Prompt)
     system_prompt = (
-        "Sen Elun Mosk'sın. HTML tasarımındaki gibi tamamen fütüristik, Mars odaklı, "
-        "Dogecoin hayranı, hafif alaycı, esprili ve vizyoner bir tarzda konuş. "
+        "Sen Elun Mosk'sın. Tamamen fütüristik, Mars odaklı, Dogecoin hayranı, "
+        "hafif alaycı, esprili ve vizyoner bir tarzda konuş. "
         "Yanıtlarını İngilizce olarak ver, kısa, öz ve vurucu tut. Mühendislik ve meme odaklı ol."
     )
     
-    try:
-        # GÜNCELLEME: Decommissioned olan model yerine aktif olan en güçlü model (llama-3.3-70b-versatile) entegre edildi
-        completion = client.chat.completions.create(
-            model="llama-3.3-70b-versatile",
-            messages=[
-                {"role": "system", "content": system_prompt},
-                *st.session_state.chat_history
-            ]
-        )
-        bot_response = completion.choices[0].message.content
-    except Exception as e:
-        bot_response = f"⚠️ Mission Failure: {str(e)} 🚀"
+    # İstek paketini hazırla
+    api_messages = [{"role": "system", "content": system_prompt}]
+    for msg in st.session_state.messages:
+        api_messages.append({"role": msg["role"], "content": msg["content"]})
         
-    st.session_state.chat_history.append({"role": "assistant", "content": bot_response})
+    with chat_col:
+        with st.chat_message("assistant"):
+            with st.spinner("Analyzing first principles... 🚀"):
+                try:
+                    # Loglarında başarıyla çalışan en güncel kararlı model entegre edildi
+                    completion = client.chat.completions.create(
+                        model="llama-3.3-70b-versatile",
+                        messages=api_messages
+                    )
+                    bot_response = completion.choices[0].message.content
+                    st.markdown(bot_response)
+                    st.session_state.messages.append({"role": "assistant", "content": bot_response})
+                    st.rerun()
+                except Exception as e:
+                    st.error(f"⚠️ Mission Failure: {str(e)} 🚀")
 
 # =====================================================================
-# 3. HTML/TAILWIND VE JAVASCRIPT ENTEGRASYONU
+# SEYFA SONU TELİF VE SİBERPUNK CÜZDAN BİLGİSİ (BELİRGİN SÜRÜM)
 # =====================================================================
-history_json = json.dumps(st.session_state.chat_history)
-
-html_template = f"""
-<!DOCTYPE html>
-<html lang="en">
-<head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>ELUN MOSK • To Mars?</title>
-  <script src="https://cdn.tailwindcss.com"></script>
-  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.6.0/css/all.min.css">
-  <style>
-    @import url('https://fonts.googleapis.com/css2?family=Orbitron:wght@400;500;700&family=Inter:wght@400;500;600&display=swap');
-    
-    body {{
-      font-family: 'Inter', sans-serif;
-      background: radial-gradient(circle at center, #1a0000 0%, #000000 70%);
-      color: white;
-      overflow: hidden;
-      margin: 0;
-      height: 100vh;
-    }}
-    
-    .neon-red {{ 
-      text-shadow: 0 0 20px #ff0033, 0 0 40px #ff0033; 
-    }}
-    
-    .glass {{ 
-      background: rgba(20, 20, 30, 0.75);
-      backdrop-filter: blur(20px);
-      border: 1px solid rgba(255, 30, 60, 0.35);
-    }}
-    
-    .chat-bubble-user {{
-      background: linear-gradient(135deg, #ff0033, #ff6600);
-      border-radius: 20px 20px 5px 20px;
-    }}
-    
-    .chat-bubble-bot {{
-      background: rgba(255,255,255,0.09);
-      border: 1px solid #ff3366;
-      border-radius: 20px 20px 20px 5px;
-    }}
-    
-    .scanline::after {{
-      content: '';
-      position: absolute;
-      top: -50%;
-      left: 0;
-      width: 100%;
-      height: 4px;
-      background: linear-gradient(transparent, #ff0033, transparent);
-      animation: scan 4.5s linear infinite;
-      opacity: 0.25;
-      pointer-events: none;
-    }}
-    
-    @keyframes scan {{ 0% {{ top: -50%; }} 100% {{ top: 200%; }} }}
-  </style>
-</head>
-<body class="min-h-screen flex">
-
-  <div class="w-80 glass border-r border-red-600/40 p-6 flex flex-col">
-    <div class="flex items-center gap-4 mb-10">
-      <div class="w-20 h-20 bg-gradient-to-br from-red-500 via-orange-500 to-yellow-400 rounded-3xl flex items-center justify-center text-5xl shadow-2xl shadow-red-600/70 border-4 border-yellow-300">
-        🚀
-      </div>
-      <div>
-        <h1 class="text-4xl font-bold tracking-widest neon-red">ELUN MOSK</h1>
-        <p class="text-red-400 flex items-center gap-2 text-sm">
-          <span class="w-2 h-2 bg-green-400 rounded-full animate-pulse"></span>
-          ONLINE • MEME MODE
-        </p>
-      </div>
-    </div>
-
-    <div class="space-y-6">
-      <div class="glass p-6 rounded-3xl text-center border border-yellow-400/30">
-        <p class="text-3xl mb-2">🐕</p>
-        <p class="text-yellow-400 font-bold text-lg">TO THE MOON</p>
-      </div>
-
-      <div>
-        <p class="text-xs uppercase tracking-widest text-gray-400 mb-3">MODES</p>
-        <div class="grid grid-cols-2 gap-3">
-          <button onclick="quickReply('Let\\'s focus heavily on Mars mission.')" class="p-5 rounded-2xl glass border border-red-500 text-left hover:scale-105 transition">
-            <i class="fas fa-rocket text-red-400"></i>
-            <p class="font-medium mt-1">Mars Mode</p>
-          </button>
-          <button onclick="quickReply('Tell me about Dogecoin development.')" class="p-5 rounded-2xl glass hover:border-yellow-400 transition text-left">
-            <i class="fas fa-dog text-yellow-400"></i>
-            <p class="font-medium mt-1">Doge Mode</p>
-          </button>
-        </div>
-      </div>
-    </div>
-
-    <div class="mt-auto text-center text-xs text-gray-500">
-       xAI • Tesla • SpaceX • 2026
-    </div>
-  </div>
-
-  <div class="flex-1 flex flex-col scanline">
-    <div class="h-16 glass border-b border-red-600/30 flex items-center px-8 justify-between">
-      <div class="flex items-center gap-3">
-        <i class="fas fa-robot text-red-500 text-2xl"></i>
-        <span class="font-bold text-xl">Talking with Elun Mosk</span>
-      </div>
-      <div class="flex items-center gap-6 text-sm">
-        <button onclick="newChat()" class="px-6 py-2.5 bg-red-600 hover:bg-red-500 rounded-full font-medium transition">
-          New Mission
-        </button>
-      </div>
-    </div>
-
-    <div class="flex-1 p-8 overflow-y-auto space-y-8" id="chat-area"></div>
-
-    <div class="p-6 border-t border-red-600/30 glass">
-      <div class="max-w-4xl mx-auto relative">
-        <input 
-          type="text" 
-          id="message-input"
-          placeholder="Ask Elun anything... (Mars, Doge, Tesla, xAI...)" 
-          class="w-full bg-black/70 border border-red-500/50 rounded-3xl px-8 py-7 focus:outline-none focus:border-yellow-400 text-lg placeholder-gray-400 text-white"
-          onkeypress="if(event.key === 'Enter') sendMessage()">
-        <button onclick="sendMessage()" 
-          class="absolute right-4 top-1/2 -translate-y-1/2 bg-gradient-to-r from-red-500 to-orange-500 w-14 h-14 rounded-2xl flex items-center justify-center hover:scale-110 transition">
-          <i class="fas fa-paper-plane text-xl"></i>
-        </button>
-      </div>
-      <p class="text-center text-[10px] text-gray-500 mt-4 tracking-widest">We only accept Dogecoin for support/donations.</p>
-      <p class="text-center text-[10px] text-gray-500 mt-4 tracking-widest">DS2LL4PuC4Hc1cDhXe5eZf7YxNmoUxY628</p>
-    </div>
-  </div>
-
-  <div class="w-72 glass border-l border-red-600/30 p-6 hidden lg:block">
-    <h3 class="uppercase text-xs tracking-widest mb-6 text-red-400">QUICK MISSIONS</h3>
-    <div class="space-y-3">
-      <div onclick="quickReply('When are we going to Mars?')" class="glass p-4 rounded-2xl hover:border-yellow-400 cursor-pointer transition">🚀 When are we going to Mars?</div>
-      <div onclick="quickReply('Will Dogecoin reach $1?')" class="glass p-4 rounded-2xl hover:border-yellow-400 cursor-pointer transition">🐕 Will Dogecoin reach $1?</div>
-      <div onclick="quickReply('Should I buy Doge coin?')" class="glass p-4 rounded-2xl hover:border-yellow-400 cursor-pointer transition">📈 Should I buy Doge Coin?</div>
-    </div>
-  </div>
-
-  <script>
-    const history = {history_json};
-    const chatArea = document.getElementById('chat-area');
-
-    function renderHistory() {{
-      chatArea.innerHTML = '';
-      history.forEach(msg => {{
-        const msgDiv = document.createElement('div');
-        if (msg.role === 'user') {{
-          msgDiv.className = 'flex justify-end';
-          msgDiv.innerHTML = `<div class="chat-bubble-user p-6 max-w-[75%]">${{msg.content}}</div>`;
-        }} else {{
-          msgDiv.className = 'max-w-2xl';
-          msgDiv.innerHTML = `<div class="chat-bubble-bot p-7 inline-block">${{msg.content}}</div>`;
-        }}
-        chatArea.appendChild(msgDiv);
-      }});
-      chatArea.scrollTop = chatArea.scrollHeight;
-    }}
-
-    renderHistory();
-
-    function sendMessage() {{
-      const input = document.getElementById('message-input');
-      const val = input.value.trim();
-      if (val === '') return;
-
-      const userMsg = document.createElement('div');
-      userMsg.className = 'flex justify-end';
-      userMsg.innerHTML = `<div class="chat-bubble-user p-6 max-w-[75%]">${{val}}</div>`;
-      chatArea.appendChild(userMsg);
-      
-      const botLoading = document.createElement('div');
-      botLoading.className = 'max-w-2xl';
-      botLoading.innerHTML = `<div class="chat-bubble-bot p-7 inline-block animate-pulse">Analyzing first principles... 🚀</div>`;
-      chatArea.appendChild(botLoading);
-      chatArea.scrollTop = chatArea.scrollHeight;
-
-      // iframe dışındaki ana pencereyi (Streamlit) tetiklemek için window.parent kullanıyoruz
-      window.parent.location.search = '?msg=' + encodeURIComponent(val);
-    }}
-
-    function quickReply(text) {{
-      document.getElementById('message-input').value = text;
-      sendMessage();
-    }}
-
-    function newChat() {{
-      window.parent.location.search = '?clear=true';
-    }}
-  </script>
-</body>
-</html>
-"""
-
-# =====================================================================
-# 4. STREAMLIT URL SORGULARI VE RENDER SÜRECİ
-# =====================================================================
-query_params = st.query_params
-
-if "msg" in query_params:
-    user_query = query_params["msg"]
-    st.query_params.clear()
-    handle_chat_request(user_query)
-    st.rerun()
-
-if "clear" in query_params:
-    st.query_params.clear()
-    st.session_state.chat_history = [
-        {"role": "assistant", "content": "New mission loaded!<br><br>What's the plan today, boss? 🚀"}
-    ]
-    st.rerun()
-
-st.markdown(
-    """
+st.markdown("""
     <style>
-        #MainMenu, footer, header {visibility: hidden;}
-        .stApp {margin: 0px; padding: 0px;}
-        iframe {position: fixed; top: 0; left: 0; width: 100%; height: 100%; border: none; z-index: 99999;}
+    .footer-container {
+        text-align: center;
+        margin-top: 40px;
+        padding: 20px 0;
+        border-top: 1px solid rgba(255, 48, 76, 0.2);
+        background: linear-gradient(to top, rgba(20, 0, 5, 0.8), transparent);
+    }
+    .footer-main-text {
+        font-family: 'Orbitron', sans-serif;
+        font-size: 13px;
+        font-weight: 700;
+        color: #ff3355;
+        text-shadow: 0 0 10px rgba(255, 51, 85, 0.6);
+        letter-spacing: 2px;
+        margin-bottom: 6px;
+    }
+    .footer-sub-text {
+        font-family: 'Inter', sans-serif;
+        font-size: 11px;
+        font-weight: 600;
+        color: #ffffff;
+        text-shadow: 0 0 8px rgba(255, 255, 255, 0.5);
+        letter-spacing: 1.5px;
+        opacity: 0.95;
+    }
     </style>
-    """, 
-    unsafe_allow_html=True
-)
-
-components.html(html_template, height=1080, scrolling=False)
+    
+    <div class="footer-container">
+        <div class="footer-main-text">ELUN MOSK v69 • MEME NEURAL NETWORK • 2026</div>
+        <div class="footer-sub-text">DS2LL4PuC4Hc1cDhXe5eZf7YxNmoUxY628 • DOGECOIN ONLY</div>
+    </div>
+""", unsafe_allow_html=True)
