@@ -122,7 +122,7 @@ st.markdown("""
         border-radius: 25px !important;
     }
     .stChatInputContainer textarea {
-        color: #ffffff !important;
+        color: #ffcc00 !important;
     }
 
     /* -----------------------------------------------------------------
