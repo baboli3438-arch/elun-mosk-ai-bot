@@ -6,7 +6,7 @@ from dotenv import load_dotenv
 import streamlit.components.v1 as components
 
 # =====================================================================
-# 1. GÜVENLİK VE API AYARLARI
+# 1. API AYARLARI
 # =====================================================================
 load_dotenv()
 try:
@@ -14,54 +14,23 @@ try:
 except Exception:
     groq_api_key = os.getenv("GROQ_API_KEY")
 
-# Eğer anahtar bulunamazsa arayüzde hata gösterip durduruyoruz
 if not groq_api_key:
-    st.error("🚨 API Anahtarı Bulunamadı! Lütfen .env dosyasını veya Streamlit Secrets ayarlarını kontrol edin.")
+    st.error("🚨 API Anahtarı Bulunamadı! Lütfen Streamlit Dashboard > Settings > Secrets kısmını kontrol edin.")
     st.stop()
 
 client = Groq(api_key=groq_api_key)
 
 # =====================================================================
-# 2. SOHBET GEÇMİŞİ VE YAPAY ZEKA YÖNETİMİ
+# 2. SOHBET GEÇMİŞİ VE STRATEGIC STATE YÖNETİMİ
 # =====================================================================
 if "chat_history" not in st.session_state:
     st.session_state.chat_history = [
-        {"role": "assistant", "content": "Yo, what's up? 🚀<br><br>I'm <span class='text-red-400 font-bold'>Elun Mosk</span>.<br>Ready to talk about Mars, Doge, Tesla, and memes?<br>What's your command, boss?"}
+        {"role": "assistant", "content": "Yo Yellow! 🚀<br><br>I'm <span class='text-red-400 font-bold'>Elun Mosk</span>.<br>Ready to talk about Mars, Doge, Tesla, and memes?<br>What's your command, boss?"}
     ]
 
-# Gelişmiş JavaScript-Python Köprüsü
-# HTML tarafı bir sorgu gönderdiğinde bu fonksiyon tetiklenir
-def handle_chat_request(user_message):
-    # Kullanıcı mesajını geçmişe ekle
-    st.session_state.chat_history.append({"role": "user", "content": user_message})
-    
-    # Elon Musk Karakter Filtresi (System Prompt)
-    system_prompt = (
-        "Sen Elun Mosk'sın. HTML tasarımındaki gibi tamamen fütüristik, Mars odaklı, "
-        "Dogecoin hayranı, hafif alaycı, esprili ve vizyoner bir tarzda konuş. "
-        "Yanıtlarını İngilizce olarak ver, kısa, öz ve vurucu tut. Mühendislik ve meme odaklı ol."
-    )
-    
-    try:
-        # Groq API üzerinden Llama 3 modelini çağırıyoruz
-        completion = client.chat.completions.create(
-            model="llama3-70b-8192",
-            messages=[
-                {"role": "system", "content": system_prompt},
-                *st.session_state.chat_history
-            ]
-        )
-        bot_response = completion.choices[0].message.content
-    except Exception as e:
-        bot_response = f"Mission Error: {str(e)} 🚀"
-        
-    # Bot yanıtını geçmişe ekle
-    st.session_state.chat_history.append({"role": "assistant", "content": bot_response})
-
 # =====================================================================
-# 3. HTML/TAILWIND VE JAVASCRIPT ENTEGRASYONU
+# 3. HTML / CSS / JS ŞABLONU
 # =====================================================================
-# Geçmişi JSON formatına çevirip HTML içine gömüyoruz
 history_json = json.dumps(st.session_state.chat_history)
 
 html_template = f"""
@@ -75,50 +44,12 @@ html_template = f"""
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.6.0/css/all.min.css">
   <style>
     @import url('https://fonts.googleapis.com/css2?family=Orbitron:wght@400;500;700&family=Inter:wght@400;500;600&display=swap');
-    
-    body {{
-      font-family: 'Inter', sans-serif;
-      background: radial-gradient(circle at center, #1a0000 0%, #000000 70%);
-      color: white;
-      overflow: hidden;
-      margin: 0;
-      height: 100vh;
-    }}
-    
-    .neon-red {{ 
-      text-shadow: 0 0 20px #ff0033, 0 0 40px #ff0033; 
-    }}
-    
-    .glass {{ 
-      background: rgba(20, 20, 30, 0.75);
-      backdrop-filter: blur(20px);
-      border: 1px solid rgba(255, 30, 60, 0.35);
-    }}
-    
-    .chat-bubble-user {{
-      background: linear-gradient(135deg, #ff0033, #ff6600);
-      border-radius: 20px 20px 5px 20px;
-    }}
-    
-    .chat-bubble-bot {{
-      background: rgba(255,255,255,0.09);
-      border: 1px solid #ff3366;
-      border-radius: 20px 20px 20px 5px;
-    }}
-    
-    .scanline::after {{
-      content: '';
-      position: absolute;
-      top: -50%;
-      left: 0;
-      width: 100%;
-      height: 4px;
-      background: linear-gradient(transparent, #ff0033, transparent);
-      animation: scan 4.5s linear infinite;
-      opacity: 0.25;
-      pointer-events: none;
-    }}
-    
+    body {{ font-family: 'Inter', sans-serif; background: radial-gradient(circle at center, #1a0000 0%, #000000 70%); color: white; overflow: hidden; margin: 0; height: 100vh; }}
+    .neon-red {{ text-shadow: 0 0 20px #ff0033, 0 0 40px #ff0033; }}
+    .glass {{ background: rgba(20, 20, 30, 0.75); backdrop-filter: blur(20px); border: 1px solid rgba(255, 30, 60, 0.35); }}
+    .chat-bubble-user {{ background: linear-gradient(135deg, #ff0033, #ff6600); border-radius: 20px 20px 5px 20px; }}
+    .chat-bubble-bot {{ background: rgba(255,255,255,0.09); border: 1px solid #ff3366; border-radius: 20px 20px 20px 5px; }}
+    .scanline::after {{ content: ''; position: absolute; top: -50%; left: 0; width: 100%; height: 4px; background: linear-gradient(transparent, #ff0033, transparent); animation: scan 4.5s linear infinite; opacity: 0.25; pointer-events: none; }}
     @keyframes scan {{ 0% {{ top: -50%; }} 100% {{ top: 200%; }} }}
   </style>
 </head>
@@ -126,24 +57,17 @@ html_template = f"""
 
   <div class="w-80 glass border-r border-red-600/40 p-6 flex flex-col">
     <div class="flex items-center gap-4 mb-10">
-      <div class="w-20 h-20 bg-gradient-to-br from-red-500 via-orange-500 to-yellow-400 rounded-3xl flex items-center justify-center text-5xl shadow-2xl shadow-red-600/70 border-4 border-yellow-300">
-        🚀
-      </div>
+      <div class="w-20 h-20 bg-gradient-to-br from-red-500 via-orange-500 to-yellow-400 rounded-3xl flex items-center justify-center text-5xl shadow-2xl shadow-red-600/70 border-4 border-yellow-300">🚀</div>
       <div>
         <h1 class="text-4xl font-bold tracking-widest neon-red">ELUN MOSK</h1>
-        <p class="text-red-400 flex items-center gap-2 text-sm">
-          <span class="w-2 h-2 bg-green-400 rounded-full animate-pulse"></span>
-          ONLINE • MEME MODE
-        </p>
+        <p class="text-red-400 flex items-center gap-2 text-sm"><span class="w-2 h-2 bg-green-400 rounded-full animate-pulse"></span> ONLINE • MEME MODE</p>
       </div>
     </div>
-
     <div class="space-y-6">
       <div class="glass p-6 rounded-3xl text-center border border-yellow-400/30">
         <p class="text-3xl mb-2">🐕</p>
         <p class="text-yellow-400 font-bold text-lg">TO THE MOON</p>
       </div>
-
       <div>
         <p class="text-xs uppercase tracking-widest text-gray-400 mb-3">MODES</p>
         <div class="grid grid-cols-2 gap-3">
@@ -158,27 +82,14 @@ html_template = f"""
         </div>
       </div>
     </div>
-
-    <div class="mt-auto text-center text-xs text-gray-500">
-    
-     xAI • Tesla • SpaceX • 2026
-    </div>
+    <div class="mt-auto text-center text-xs text-gray-500">xAI • Tesla • SpaceX • 2026</div>
   </div>
 
   <div class="flex-1 flex flex-col scanline">
     <div class="h-16 glass border-b border-red-600/30 flex items-center px-8 justify-between">
-      <div class="flex items-center gap-3">
-        <i class="fas fa-robot text-red-500 text-2xl"></i>
-        <span class="font-bold text-xl">Talking with Elun Mosk</span>
-      </div>
+      <div class="flex items-center gap-3"><i class="fas fa-robot text-red-500 text-2xl"></i><span class="font-bold text-xl">Talking with Elun Mosk</span></div>
       <div class="flex items-center gap-6 text-sm">
-        <button class="flex items-center gap-2 hover:text-cyan-400 transition">
-          <i class="fas fa-microphone"></i>
-          <span>Voice Mode</span>
-        </button>
-        <button onclick="newChat()" class="px-6 py-2.5 bg-red-600 hover:bg-red-500 rounded-full font-medium transition">
-          New Mission
-        </button>
+        <button onclick="newChat()" class="px-6 py-2.5 bg-red-600 hover:bg-red-500 rounded-full font-medium transition">New Mission</button>
       </div>
     </div>
 
@@ -186,19 +97,10 @@ html_template = f"""
 
     <div class="p-6 border-t border-red-600/30 glass">
       <div class="max-w-4xl mx-auto relative">
-        <input 
-          type="text" 
-          id="message-input"
-          placeholder="Ask Elun anything... (Mars, Doge, Tesla, xAI...)" 
-          class="w-full bg-black/70 border border-red-500/50 rounded-3xl px-8 py-7 focus:outline-none focus:border-yellow-400 text-lg placeholder-gray-400"
-          onkeypress="if(event.key === 'Enter') sendMessage()">
-        <button onclick="sendMessage()" 
-          class="absolute right-4 top-1/2 -translate-y-1/2 bg-gradient-to-r from-red-500 to-orange-500 w-14 h-14 rounded-2xl flex items-center justify-center hover:scale-110 transition">
-          <i class="fas fa-paper-plane text-xl"></i>
-        </button>
+        <input type="text" id="message-input" placeholder="Ask Elun anything... (Mars, Doge, Tesla, xAI...)" class="w-full bg-black/70 border border-red-500/50 rounded-3xl px-8 py-7 focus:outline-none focus:border-yellow-400 text-lg placeholder-gray-400 text-white" onkeypress="if(event.key === 'Enter') sendMessage()">
+        <button onclick="sendMessage()" class="absolute right-4 top-1/2 -translate-y-1/2 bg-gradient-to-r from-red-500 to-orange-500 w-14 h-14 rounded-2xl flex items-center justify-center hover:scale-110 transition"><i class="fas fa-paper-plane text-xl"></i></button>
       </div>
-      <p class="text-center text-[10px] text-gray-500 mt-4 tracking-widest">We only accept Dogecoin for support/donations.</p>
-      <p class="text-center text-[10px] text-gray-500 mt-4 tracking-widest">DS2LL4PuC4Hc1cDhXe5eZf7YxNmoUxY628</p>
+      <p class="text-center text-[10px] text-gray-500 mt-4 tracking-widest">ELUN MOSK v69 • MEME NEURAL NETWORK • 2026</p>
     </div>
   </div>
 
@@ -207,32 +109,24 @@ html_template = f"""
     <div class="space-y-3">
       <div onclick="quickReply('When are we going to Mars?')" class="glass p-4 rounded-2xl hover:border-yellow-400 cursor-pointer transition">🚀 When are we going to Mars?</div>
       <div onclick="quickReply('Will Dogecoin reach $1?')" class="glass p-4 rounded-2xl hover:border-yellow-400 cursor-pointer transition">🐕 Will Dogecoin reach $1?</div>
-      <div onclick="quickReply('Should I buy Doge coin?')" class="glass p-4 rounded-2xl hover:border-yellow-400 cursor-pointer transition">📈 Should I buy Doge Coin?</div>
+      <div onclick="quickReply('Should I buy Tesla stock?')" class="glass p-4 rounded-2xl hover:border-yellow-400 cursor-pointer transition">📈 Should I buy Tesla stock?</div>
     </div>
   </div>
 
   <script>
-    // Python hafızasından gelen veriyi JS'e aktarıyoruz
     const history = {history_json};
     const chatArea = document.getElementById('chat-area');
 
-    // Sayfa yüklendiğinde sohbet geçmişini render et
     function renderHistory() {{
       chatArea.innerHTML = '';
       history.forEach(msg => {{
         const msgDiv = document.createElement('div');
-        if (msg.role === 'user') {{
-          msgDiv.className = 'flex justify-end';
-          msgDiv.innerHTML = `<div class="chat-bubble-user p-6 max-w-[75%]">${{msg.content}}</div>`;
-        }} else {{
-          msgDiv.className = 'max-w-2xl';
-          msgDiv.innerHTML = `<div class="chat-bubble-bot p-7 inline-block">${{msg.content}}</div>`;
-        }}
+        msgDiv.className = msg.role === 'user' ? 'flex justify-end' : 'max-w-2xl';
+        msgDiv.innerHTML = `<div class="${{msg.role === 'user' ? 'chat-bubble-user' : 'chat-bubble-bot'}} p-6">${{msg.content}}</div>`;
         chatArea.appendChild(msgDiv);
       }});
       chatArea.scrollTop = chatArea.scrollHeight;
     }}
-
     renderHistory();
 
     function sendMessage() {{
@@ -240,29 +134,25 @@ html_template = f"""
       const val = input.value.trim();
       if (val === '') return;
 
-      // Geçici yükleniyor görseli oluştur
-      const userMsg = document.createElement('div');
-      userMsg.className = 'flex justify-end';
-      userMsg.innerHTML = `<div class="chat-bubble-user p-6 max-w-[75%]">${{val}}</div>`;
-      chatArea.appendChild(userMsg);
-      
-      const botLoading = document.createElement('div');
-      botLoading.className = 'max-w-2xl';
-      botLoading.innerHTML = `<div class="chat-bubble-bot p-7 inline-block animate-pulse">Analyzing first principles... 🚀</div>`;
-      chatArea.appendChild(botLoading);
-      chatArea.scrollTop = chatArea.scrollHeight;
-
-      // URL parametresine ekleyip Python'a komut yolluyoruz
-      window.location.search = '?msg=' + encodeURIComponent(val);
+      // Tarayıcı güvenliğini aşmak için resmi Streamlit postMessage API'sini tetikliyoruz
+      window.parent.postMessage({{
+        type: 'streamlit:setComponentValue',
+        value: {{ action: 'msg', data: val }}
+      }}, '*');
     }}
 
     function quickReply(text) {{
-      document.getElementById('message-input').value = text;
-      sendMessage();
+      window.parent.postMessage({{
+        type: 'streamlit:setComponentValue',
+        value: {{ action: 'msg', data: text }}
+      }}, '*');
     }}
 
     function newChat() {{
-      window.location.search = '?clear=true';
+      window.parent.postMessage({{
+        type: 'streamlit:setComponentValue',
+        value: {{ action: 'clear', data: true }}
+      }}, '*');
     }}
   </script>
 </body>
@@ -270,27 +160,8 @@ html_template = f"""
 """
 
 # =====================================================================
-# 4. STREAMLIT URL SORGULARI VE RENDER SÜRECİ
+# 4. GÜVENLİ VERİ YAKALAMA VE RENDER SÜRECİ
 # =====================================================================
-# URL parametrelerini dinleme
-query_params = st.query_params
-
-if "msg" in query_params:
-    user_query = query_params["msg"]
-    # URL'yi temizle (sonsuz döngüyü engellemek için)
-    st.query_params.clear()
-    # İşlemi yap ve arayüzü güncelle
-    handle_chat_request(user_query)
-    st.rerun()
-
-if "clear" in query_params:
-    st.query_params.clear()
-    st.session_state.chat_history = [
-        {"role": "assistant", "content": "New mission loaded!<br><br>What's the plan today, boss? 🚀"}
-    ]
-    st.rerun()
-
-# Streamlit'in kendi stilini tamamen gizleyip kendi şık siber penceremizi ekrana basıyoruz
 st.markdown(
     """
     <style>
@@ -302,5 +173,38 @@ st.markdown(
     unsafe_allow_html=True
 )
 
-# HTML şablonunu tam ekran render et
-components.html(html_template, height=1080, scrolling=False)
+# JavaScript'ten gelen veriyi güvenli bileşenle yakalıyoruz
+response_data = components.html(html_template, height=1080, scrolling=False)
+
+if response_data:
+    # JavaScript postMessage burayı tetikler
+    try:
+        # Eğer gelen veri string ise dict'e çevir, zaten dict ise doğrudan kullan
+        res = json.loads(response_data) if isinstance(response_data, str) else response_data
+        action = res.get("action")
+        payload = res.get("data")
+        
+        if action == "msg":
+            st.session_state.chat_history.append({"role": "user", "content": payload})
+            
+            system_prompt = (
+                "Sen Elun Mosk'sın. Tasarımdaki gibi fütüristik, Mars odaklı, Dogecoin seven, "
+                "hafif alaycı ve vizyoner bir tarzda konuş. Yanıtların kısa, vurucu ve İngilizce olsun."
+            )
+            
+            with st.spinner(""):
+                completion = client.chat.completions.create(
+                    model="llama3-70b-8192",
+                    messages=[{"role": "system", "content": system_prompt}, *st.session_state.chat_history]
+                )
+                bot_response = completion.choices[0].message.content
+                st.session_state.chat_history.append({"role": "assistant", "content": bot_response})
+                st.rerun()
+                
+        elif action == "clear":
+            st.session_state.chat_history = [
+                {"role": "assistant", "content": "New mission loaded!<br><br>What's the plan today, boss? 🚀"}
+            ]
+            st.rerun()
+    except Exception as e:
+        pass
