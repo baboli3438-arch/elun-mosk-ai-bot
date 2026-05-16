@@ -333,7 +333,7 @@ st.markdown("""
     </style>
     
     <div class="footer-container">
-        <div class="footer-main-text">ELUN MOSK v69 • MEME NEURAL NETWORK • 2026</div>
-        <div class="footer-sub-text">DS2LL4PuC4Hc1cDhXe5eZf7YxNmoUxY628 • DOGECOIN ONLY</div>
+        <div class="footer-main-text">ELUN MOSK • MEME NEURAL NETWORK • 2071</div>
+        <div class="footer-sub-text">SUPPORT/DONATE • DS2LL4PuC4Hc1cDhXe5eZf7YxNmoUxY628 • DOGECOIN ONLY</div>
     </div>
 """, unsafe_allow_html=True)
