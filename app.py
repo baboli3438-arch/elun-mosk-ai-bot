@@ -6,7 +6,16 @@ from dotenv import load_dotenv
 import streamlit.components.v1 as components
 
 # =====================================================================
-# 1. API AYARLARI
+# PAGE CONFIG
+# =====================================================================
+st.set_page_config(
+    page_title="ELUN MOSK",
+    layout="wide",
+    initial_sidebar_state="collapsed"
+)
+
+# =====================================================================
+# API
 # =====================================================================
 load_dotenv()
 
@@ -22,7 +31,7 @@ if not groq_api_key:
 client = Groq(api_key=groq_api_key)
 
 # =====================================================================
-# 2. CHAT HISTORY
+# SESSION
 # =====================================================================
 if "chat_history" not in st.session_state:
     st.session_state.chat_history = [
@@ -30,15 +39,18 @@ if "chat_history" not in st.session_state:
             "role": "assistant",
             "content": """
             Yo, what's up? 🚀<br><br>
+
             I'm <span class='text-red-400 font-bold'>Elun Mosk</span>.<br>
-            Ready to talk about Mars, Doge, Tesla, xAI and memes.<br><br>
+
+            Ready to talk about Mars, Doge, Tesla and memes?<br><br>
+
             What's your command, boss?
             """
         }
     ]
 
 # =====================================================================
-# 3. AI CHAT FUNCTION
+# AI FUNCTION
 # =====================================================================
 def handle_chat_request(user_message):
 
@@ -49,16 +61,17 @@ def handle_chat_request(user_message):
 
     system_prompt = """
     Sen Elun Mosk'sın.
-    Fütüristik konuş.
-    Mars odaklı ol.
-    Dogecoin hayranı ol.
+    Mars fanatiği ol.
+    Dogecoin sev.
+    Tesla ve SpaceX hakkında konuş.
     Hafif alaycı ol.
-    Mizahi ol.
-    Cevapları kısa ver.
+    Meme kültürü kullan.
     İngilizce konuş.
+    Cevapları kısa ve havalı ver.
     """
 
     try:
+
         completion = client.chat.completions.create(
             model="llama3-70b-8192",
             messages=[
@@ -75,6 +88,7 @@ def handle_chat_request(user_message):
         bot_response = completion.choices[0].message.content
 
     except Exception as e:
+
         bot_response = f"""
         🚨 Mission Failure<br><br>
         {str(e)}
@@ -86,11 +100,11 @@ def handle_chat_request(user_message):
     })
 
 # =====================================================================
-# 4. URL PARAMS
+# URL PARAMS
 # =====================================================================
 query_params = st.query_params
 
-# CHAT MESSAGE
+# MESSAGE
 if "msg" in query_params:
 
     user_query = query_params.get("msg")
@@ -122,12 +136,12 @@ if "clear" in query_params:
     st.rerun()
 
 # =====================================================================
-# 5. HISTORY JSON
+# CHAT HISTORY JSON
 # =====================================================================
 history_json = json.dumps(st.session_state.chat_history)
 
 # =====================================================================
-# 6. HTML UI
+# HTML
 # =====================================================================
 html_template = f"""
 <!DOCTYPE html>
@@ -208,7 +222,7 @@ body {{
 
 <body class="flex">
 
-<!-- LEFT SIDEBAR -->
+<!-- LEFT -->
 <div class="w-80 glass border-r border-red-500/30 p-6 flex flex-col">
 
     <div class="flex items-center gap-4 mb-10">
@@ -261,7 +275,7 @@ body {{
 
 </div>
 
-<!-- CHAT AREA -->
+<!-- MAIN -->
 <div class="flex-1 flex flex-col scanline relative">
 
     <!-- TOPBAR -->
@@ -314,14 +328,6 @@ body {{
 
         </div>
 
-        <p class="text-center text-[10px] text-gray-500 mt-4">
-            We only accept Dogecoin for support.
-        </p>
-
-        <p class="text-center text-[10px] text-gray-500 mt-2">
-            DS2LL4PuC4Hc1cDhXe5eZf7YxNmoUxY628
-        </p>
-
     </div>
 
 </div>
@@ -333,6 +339,12 @@ const history = {history_json};
 const chatArea = document.getElementById('chat-area');
 
 function renderHistory() {{
+
+    const oldLoading = document.getElementById('loading-message');
+
+    if(oldLoading) {{
+        oldLoading.remove();
+    }}
 
     chatArea.innerHTML = '';
 
@@ -398,9 +410,11 @@ function sendMessage() {{
 
     loading.className = 'max-w-2xl';
 
+    loading.id = 'loading-message';
+
     loading.innerHTML = `
     <div class="chat-bot p-7 inline-block animate-pulse">
-        Analyzing first principles... 🚀
+        Analyzing rockets... 🚀
     </div>
     `;
 
@@ -410,9 +424,15 @@ function sendMessage() {{
 
     input.value = '';
 
-    // FIXED
-    window.parent.location.search =
-    '?msg=' + encodeURIComponent(val);
+    window.parent.postMessage(
+        {{
+            type: "streamlit:setQueryParams",
+            params: {{
+                msg: val
+            }}
+        }},
+        "*"
+    );
 
 }}
 
@@ -426,8 +446,15 @@ function quickReply(text) {{
 
 function newChat() {{
 
-    // FIXED
-    window.parent.location.search = '?clear=true';
+    window.parent.postMessage(
+        {{
+            type: "streamlit:setQueryParams",
+            params: {{
+                clear: "true"
+            }}
+        }},
+        "*"
+    );
 
 }}
 
@@ -438,30 +465,30 @@ function newChat() {{
 """
 
 # =====================================================================
-# 7. HIDE STREAMLIT UI
+# HIDE STREAMLIT
 # =====================================================================
 st.markdown(
     """
     <style>
 
-    #MainMenu {{
+    #MainMenu {
         visibility:hidden;
-    }}
+    }
 
-    header {{
+    header {
         visibility:hidden;
-    }}
+    }
 
-    footer {{
+    footer {
         visibility:hidden;
-    }}
+    }
 
-    .stApp {{
+    .stApp {
         margin:0;
         padding:0;
-    }}
+    }
 
-    iframe {{
+    iframe {
         position:fixed;
         top:0;
         left:0;
@@ -469,7 +496,7 @@ st.markdown(
         height:100%;
         border:none;
         z-index:999999;
-    }}
+    }
 
     </style>
     """,
@@ -477,10 +504,10 @@ st.markdown(
 )
 
 # =====================================================================
-# 8. RENDER HTML
+# RENDER
 # =====================================================================
 components.html(
     html_template,
     height=1080,
-    scrolling=False
+    scrolling=True
 )
