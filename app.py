@@ -5,18 +5,18 @@ from groq import Groq
 from dotenv import load_dotenv
 import streamlit.components.v1 as components
 
-# =====================================================================
+# =========================================================
 # PAGE CONFIG
-# =====================================================================
+# =========================================================
 st.set_page_config(
     page_title="ELUN MOSK",
     layout="wide",
     initial_sidebar_state="collapsed"
 )
 
-# =====================================================================
+# =========================================================
 # API
-# =====================================================================
+# =========================================================
 load_dotenv()
 
 try:
@@ -30,9 +30,9 @@ if not groq_api_key:
 
 client = Groq(api_key=groq_api_key)
 
-# =====================================================================
-# SESSION
-# =====================================================================
+# =========================================================
+# SESSION STATE
+# =========================================================
 if "chat_history" not in st.session_state:
     st.session_state.chat_history = [
         {
@@ -49,9 +49,9 @@ if "chat_history" not in st.session_state:
         }
     ]
 
-# =====================================================================
-# AI FUNCTION
-# =====================================================================
+# =========================================================
+# CHAT FUNCTION
+# =========================================================
 def handle_chat_request(user_message):
 
     st.session_state.chat_history.append({
@@ -61,13 +61,14 @@ def handle_chat_request(user_message):
 
     system_prompt = """
     Sen Elun Mosk'sın.
-    Mars fanatiği ol.
+
+    Fütüristik konuş.
+    Mars odaklı ol.
     Dogecoin sev.
-    Tesla ve SpaceX hakkında konuş.
     Hafif alaycı ol.
-    Meme kültürü kullan.
+    Komik ol.
     İngilizce konuş.
-    Cevapları kısa ve havalı ver.
+    Kısa cevaplar ver.
     """
 
     try:
@@ -99,9 +100,9 @@ def handle_chat_request(user_message):
         "content": bot_response
     })
 
-# =====================================================================
-# URL PARAMS
-# =====================================================================
+# =========================================================
+# QUERY PARAMS
+# =========================================================
 query_params = st.query_params
 
 # MESSAGE
@@ -112,16 +113,15 @@ if "msg" in query_params:
     if isinstance(user_query, list):
         user_query = user_query[0]
 
-    st.query_params.clear()
-
     handle_chat_request(user_query)
+
+    st.query_params.clear()
+    st.experimental_set_query_params()
 
     st.rerun()
 
-# CLEAR CHAT
+# CLEAR
 if "clear" in query_params:
-
-    st.query_params.clear()
 
     st.session_state.chat_history = [
         {
@@ -133,16 +133,19 @@ if "clear" in query_params:
         }
     ]
 
+    st.query_params.clear()
+    st.experimental_set_query_params()
+
     st.rerun()
 
-# =====================================================================
-# CHAT HISTORY JSON
-# =====================================================================
+# =========================================================
+# JSON HISTORY
+# =========================================================
 history_json = json.dumps(st.session_state.chat_history)
 
-# =====================================================================
+# =========================================================
 # HTML
-# =====================================================================
+# =========================================================
 html_template = f"""
 <!DOCTYPE html>
 <html lang="en">
@@ -216,13 +219,22 @@ body {{
     100% {{ top: 200%; }}
 }}
 
+::-webkit-scrollbar {{
+    width: 8px;
+}}
+
+::-webkit-scrollbar-thumb {{
+    background: #ff0033;
+    border-radius: 10px;
+}}
+
 </style>
 
 </head>
 
 <body class="flex">
 
-<!-- LEFT -->
+<!-- SIDEBAR -->
 <div class="w-80 glass border-r border-red-500/30 p-6 flex flex-col">
 
     <div class="flex items-center gap-4 mb-10">
@@ -232,6 +244,7 @@ body {{
         </div>
 
         <div>
+
             <h1 class="text-4xl font-bold neon-red tracking-widest">
                 ELUN MOSK
             </h1>
@@ -240,27 +253,31 @@ body {{
                 <span class="w-2 h-2 rounded-full bg-green-400 animate-pulse"></span>
                 ONLINE • MEME MODE
             </p>
+
         </div>
 
     </div>
 
     <div class="space-y-4">
 
-        <button onclick="quickReply('When are we going to Mars?')"
+        <button
+        onclick="quickReply('When are we going to Mars?')"
         class="glass p-5 rounded-2xl hover:border-yellow-400 transition w-full text-left">
 
             🚀 Mars Mission
 
         </button>
 
-        <button onclick="quickReply('Will Dogecoin reach 1 dollar?')"
+        <button
+        onclick="quickReply('Will Dogecoin reach 1 dollar?')"
         class="glass p-5 rounded-2xl hover:border-yellow-400 transition w-full text-left">
 
             🐕 Dogecoin
 
         </button>
 
-        <button onclick="quickReply('Tell me about Tesla AI.')"
+        <button
+        onclick="quickReply('Tell me about Tesla AI.')"
         class="glass p-5 rounded-2xl hover:border-yellow-400 transition w-full text-left">
 
             🤖 Tesla AI
@@ -291,7 +308,8 @@ body {{
 
         </div>
 
-        <button onclick="newChat()"
+        <button
+        onclick="newChat()"
         class="px-6 py-2 bg-red-600 hover:bg-red-500 rounded-full">
 
             New Mission
@@ -300,8 +318,9 @@ body {{
 
     </div>
 
-    <!-- CHAT -->
-    <div id="chat-area"
+    <!-- CHAT AREA -->
+    <div
+    id="chat-area"
     class="flex-1 overflow-y-auto p-8 space-y-6">
     </div>
 
@@ -339,12 +358,6 @@ const history = {history_json};
 const chatArea = document.getElementById('chat-area');
 
 function renderHistory() {{
-
-    const oldLoading = document.getElementById('loading-message');
-
-    if(oldLoading) {{
-        oldLoading.remove();
-    }}
 
     chatArea.innerHTML = '';
 
@@ -394,23 +407,7 @@ function sendMessage() {{
 
     if(val === '') return;
 
-    const userDiv = document.createElement('div');
-
-    userDiv.className = 'flex justify-end';
-
-    userDiv.innerHTML = `
-    <div class="chat-user p-6 max-w-[75%]">
-        ${{val}}
-    </div>
-    `;
-
-    chatArea.appendChild(userDiv);
-
     const loading = document.createElement('div');
-
-    loading.className = 'max-w-2xl';
-
-    loading.id = 'loading-message';
 
     loading.innerHTML = `
     <div class="chat-bot p-7 inline-block animate-pulse">
@@ -424,37 +421,31 @@ function sendMessage() {{
 
     input.value = '';
 
-    window.parent.postMessage(
-        {{
-            type: "streamlit:setQueryParams",
-            params: {{
-                msg: val
-            }}
-        }},
-        "*"
-    );
+    const currentUrl = new URL(window.top.location.href);
+
+    currentUrl.searchParams.set("msg", val);
+
+    window.top.location.href = currentUrl.toString();
 
 }}
 
 function quickReply(text) {{
 
-    document.getElementById('message-input').value = text;
+    const currentUrl = new URL(window.top.location.href);
 
-    sendMessage();
+    currentUrl.searchParams.set("msg", text);
+
+    window.top.location.href = currentUrl.toString();
 
 }}
 
 function newChat() {{
 
-    window.parent.postMessage(
-        {{
-            type: "streamlit:setQueryParams",
-            params: {{
-                clear: "true"
-            }}
-        }},
-        "*"
-    );
+    const currentUrl = new URL(window.top.location.href);
+
+    currentUrl.searchParams.set("clear", "true");
+
+    window.top.location.href = currentUrl.toString();
 
 }}
 
@@ -464,9 +455,9 @@ function newChat() {{
 </html>
 """
 
-# =====================================================================
+# =========================================================
 # HIDE STREAMLIT
-# =====================================================================
+# =========================================================
 st.markdown(
     """
     <style>
@@ -503,9 +494,9 @@ st.markdown(
     unsafe_allow_html=True
 )
 
-# =====================================================================
+# =========================================================
 # RENDER
-# =====================================================================
+# =========================================================
 components.html(
     html_template,
     height=1080,
